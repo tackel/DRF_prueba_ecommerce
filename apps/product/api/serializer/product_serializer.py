@@ -6,3 +6,17 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         exclude = ('state',)
         #fields = '__all__'
+    
+class ChangeStockProduct(serializers.ModelSerializer):
+    class Meta():
+        model = Product
+        fields = ('stock',)
+    
+
+class ProductRetrieveSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Product
+        exclude = ('state',)
+    
+
