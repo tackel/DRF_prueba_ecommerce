@@ -12,6 +12,25 @@ class ChangeStockProduct(serializers.ModelSerializer):
         model = Product
         fields = ('stock',)
     
+    def validate_stock(self, value):
+        if value == '' or value == None:
+            raise serializers.ValidationError("Need input stock value.")
+        return value
+
+    def validate(self, data):
+        if 'stock' not in data.keys():
+            raise serializers.ValidationError({
+                "measure_unit": "Stock field is required."
+            })
+        
+        return data
+
+    def to_representation(self, instance):
+        return {
+            "name":instance.name,
+            "stock": instance.stock
+        }
+    
 
 class ProductRetrieveSerializer(serializers.ModelSerializer):
 

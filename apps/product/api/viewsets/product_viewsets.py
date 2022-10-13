@@ -59,24 +59,14 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     @action(methods=['put'], detail=True)
     def change_stock(self, request, pk=None):
+        """ Change the stock of product """
         product = self.get_queryset(pk)
         if product:
             product_serializer = ChangeStockProduct(self.get_queryset(pk),request.data)
             if product_serializer.is_valid():
                 product_serializer.save()
-                return Response({'Message':f"Stock of Product {product} updated "}, status=status.HTTP_200_OK)
+                return Response({'Message':f"Stock of Product {product_serializer.data['name']} updated = {product_serializer.data['stock']} "}, status=status.HTTP_200_OK)
             return Response({'Message':'', 'Error':product_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-
-        '''
-        product = self.get_queryset(pk)
-        if product:
-            print(product)
-            print(request.data)
-            stock_serializer = ChangeStockProduct(data= request.data)
-            print(stock_serializer)
-            if stock_serializer.is_valid():
-                stock_serializer.save()
-        '''
         return Response({'Message':'', 'Error':'The product does not exist!'}, status=status.HTTP_400_BAD_REQUEST)
 
 

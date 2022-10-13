@@ -39,7 +39,8 @@ BASE_APPS = [
 ]
 
 LOCAL_APPS = [
-    'apps.product'
+    'apps.product',
+    'apps.order'
 
 ]
 
