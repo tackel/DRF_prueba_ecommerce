@@ -5,6 +5,7 @@ from rest_framework.decorators import action
 
 from apps.product.api.serializer.product_serializer import ProductSerializer, ChangeStockProduct, ProductRetrieveSerializer
 
+
 class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
     #queryset = ProductSerializer.Meta.model.objects.all()
