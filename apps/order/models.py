@@ -16,20 +16,21 @@ class Order(models.Model):
         verbose_name_plural = 'Orders'
     
     def __str__(self):
-        """Unicode representation of Product."""
+        """Unicode representation of Order."""
         return str(self.id)
 
 
 class OrderDetail(models.Model):
-    order = models.ForeignKey(Order, on_delete= models.CASCADE)
+    order = models.ForeignKey(Order, related_name='order', on_delete= models.CASCADE)
     cuantity = models.IntegerField('Cuantity')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, related_name='product', on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = 'Order Detail'
         verbose_name_plural = 'Orders Details'
 
+
     def __str__(self):
-        """Unicode representation of Product."""
+        """Unicode representation of Order Detail."""
         return str(self.order)
 
