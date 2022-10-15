@@ -11,15 +11,20 @@ from apps.order.api.serializer.order_serializer import OrderSerializer, OrderDet
 class OrderViewSets(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
     queryset = OrderSerializer.Meta.model.objects.all()
-
+    
     # sobre escribo el get_queryset para evitar hacer N+1 y asi hacer menos consultas
     def get_queryset(self):
-            queryset = super().get_queryset()
-            queryset = queryset.prefetch_related(
-                Prefetch('order')
-            )
-            return queryset
-
+        queryset = super().get_queryset()
+        queryset = queryset.prefetch_related(
+            Prefetch('order')
+        )
+        return queryset
+    
+    def list(self, request):
+        order_serializer = self.serializer_class(self.get_queryset(),many=True)
+       
+        return Response(order_serializer.data, status=status.HTTP_200_OK)
+    
     def create(self, request):
         order_serializer = self.serializer_class(data=request.data)
         if order_serializer.is_valid():
