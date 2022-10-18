@@ -4,8 +4,8 @@ from rest_framework import status
 
 from django.db.models import Prefetch
 
-from apps.order.api.serializer.order_serializer import OrderSerializer, OrderDetailSerializer
-
+from apps.order.api.serializer.order_serializer import OrderSerializer, OrderDetailSerializer, OrderUpdateSerializer
+from apps.order.models import Order
 
 
 class OrderViewSets(viewsets.ModelViewSet):
@@ -13,12 +13,14 @@ class OrderViewSets(viewsets.ModelViewSet):
     queryset = OrderSerializer.Meta.model.objects.all()
     
     # sobre escribo el get_queryset para evitar hacer N+1 y asi hacer menos consultas
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        queryset = queryset.prefetch_related(
-            Prefetch('order')
-        )
-        return queryset
+    def get_queryset(self, pk=None):
+        if pk is None:
+            queryset = super().get_queryset()
+            queryset = queryset.prefetch_related(
+                Prefetch('order')
+            )
+            return queryset
+        return OrderUpdateSerializer.Meta.model.objects.filter(id=pk).first()
     
     def list(self, request):
         order_serializer = self.serializer_class(self.get_queryset(),many=True)
@@ -34,7 +36,14 @@ class OrderViewSets(viewsets.ModelViewSet):
         return Response({
                 'Errors': order_serializer.errors
             }, status=status.HTTP_400_BAD_REQUEST)
-    
+
+    def update(self, request, pk):
+        order_serializer = OrderUpdateSerializer(self.get_queryset(pk), request.data)
+        if order_serializer.is_valid():
+            order_serializer.save()
+            return Response({'Message':"Order updated successfully!"}, status=status.HTTP_200_OK)
+        return Response({'Message':'', 'Error':order_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class OrderDetailViewSets(viewsets.ModelViewSet):
     serializer_class = OrderDetailSerializer

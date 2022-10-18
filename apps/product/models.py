@@ -17,6 +17,6 @@ class Product(models.Model):
 
     def __str__(self):
         """Unicode representation of Product."""
-        return self.name
+        return f'id: {self.id}-Name: {self.name}'
         
         
