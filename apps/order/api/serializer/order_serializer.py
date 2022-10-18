@@ -24,10 +24,9 @@ class OrderDetailSerializer(serializers.ModelSerializer):
     
     def validate(self, data):
         if data['product'].stock - data['cuantity'] >= 0:
-            product_obj = ProductSerializer.Meta.model.objects.filter(id=data['product'].id).first() # consigo la instancia
-            product_obj.stock = (data['product'].stock - data['cuantity'])
-            product_obj.save()
-            print(product_obj.stock)
+            #product_obj = ProductSerializer.Meta.model.objects.filter(id=data['product'].id).first() # consigo la instancia
+            #product_obj.stock = (data['product'].stock - data['cuantity'])
+            #product_obj.save()
             return data
         raise serializers.ValidationError({"Error": f"Insufficient stock of {data['product']} for this order"})
     
@@ -72,6 +71,12 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = ('id','create_date','order')
 
+    def discount_stock(self, order_detail):
+        # Descuento el stock de cada producto agregado a la orden  
+        product_obj = ProductSerializer.Meta.model.objects.filter(id=order_detail['product'].id).first()
+        product_obj.stock = (order_detail['product'].stock - order_detail['cuantity'])
+        product_obj.save()
+
     def create(self, validated_data):
         #Obtener el contenido de order_detail
         order_details_data = validated_data.pop('order')
@@ -79,8 +84,9 @@ class OrderSerializer(serializers.ModelSerializer):
         nueva_orden = Order.objects.create(**validated_data)
         
         #En un ciclo, recorremos el orden_detail y creamos el nuevo registro
-        for order_detail in order_details_data:
-            OrderDetail.objects.create(**order_detail, order=nueva_orden)       
+        for order_detail in order_details_data:            
+            OrderDetail.objects.create(**order_detail, order=nueva_orden) 
+            self.discount_stock(order_detail)
         return nueva_orden
    
 class OrderUpdateSerializer(serializers.ModelSerializer):

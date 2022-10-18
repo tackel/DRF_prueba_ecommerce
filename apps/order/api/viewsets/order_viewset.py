@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from django.db.models import Prefetch
-
+from apps.product.api.serializer.product_serializer import ProductSerializer
 from apps.order.api.serializer.order_serializer import OrderSerializer, OrderDetailSerializer, OrderUpdateSerializer
 from apps.order.models import Order
 
@@ -26,10 +26,9 @@ class OrderViewSets(viewsets.ModelViewSet):
         order_serializer = self.serializer_class(self.get_queryset(),many=True)
        
         return Response(order_serializer.data, status=status.HTTP_200_OK)
-    
+
     def create(self, request):
         order_serializer = self.serializer_class(data=request.data)
-        
         if order_serializer.is_valid():
             order_serializer.save()
             return Response({'Message':'Order created'}, status=status.HTTP_201_CREATED) 
