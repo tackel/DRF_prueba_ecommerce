@@ -106,12 +106,17 @@ class OrderUpdateSerializer(serializers.ModelSerializer):
         instance.save()
         '''
         orden_details_data = validated_data.pop('order')
-        # Datos de Orden Detalles
+        # Datos de Order Detail
         if orden_details_data:
             for order_detail in orden_details_data:
                 order_detail_id = order_detail.get('id', None)
                 if order_detail_id:
-                    update_order_detail = OrderDetail.objects.get(id=order_detail_id)
+                    try:
+                        update_order_detail = OrderDetail.objects.get(id=order_detail_id)
+                    except:
+                        raise serializers.ValidationError({
+                                "Error": "id order detail is not in Order selected"
+                            })
                     if update_order_detail.order.id == instance.id:
                         update_order_detail.product = order_detail.get('product')
                         update_order_detail.cuantity = order_detail.get('cuantity')
