@@ -4,7 +4,7 @@ from rest_framework import status
 
 from django.db.models import Prefetch
 from apps.product.api.serializer.product_serializer import ProductSerializer
-from apps.order.api.serializer.order_serializer import OrderSerializer, OrderDetailSerializer, OrderUpdateSerializer
+from apps.order.api.serializer.order_serializer import OrderSerializer, OrderDetailSerializer, OrderUpdateSerializer, OrderDetailCreateSerializer
 from apps.order.models import Order
 
 
@@ -45,7 +45,13 @@ class OrderViewSets(viewsets.ModelViewSet):
 
 
 class OrderDetailViewSets(viewsets.ModelViewSet):
-    serializer_class = OrderDetailSerializer
-    queryset = OrderDetailSerializer.Meta.model.objects.all()
+    
+    serializer_class = OrderDetailCreateSerializer
+    queryset = OrderDetailCreateSerializer.Meta.model.objects.all()
 
-
+    def create(self, request):
+        order_detail_serilizer = self.serializer_class(data=request.data)
+        if order_detail_serilizer.is_valid():
+            order_detail_serilizer.save()
+            return Response({'Message':f"Order detail created in orden {order_detail_serilizer.data['order']} "}, status=status.HTTP_200_OK)
+        return Response({'Message':'', 'Error':order_detail_serilizer.errors}, status=status.HTTP_400_BAD_REQUEST)

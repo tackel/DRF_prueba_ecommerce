@@ -51,7 +51,13 @@ class OrderDetailUpdateSerializer(serializers.ModelSerializer):
         model = OrderDetail
         fields = ('id','cuantity','product','productId')
         extra_kwargs = {'id': {'read_only':False}}
-
+    
+    def validate_id(self, value):
+        print(value)
+        return value
+    def validate(self, data):
+        return data
+    
     def to_representation(self, instance):
         #stock = instance.product.stock - instance.cuantity
         return {
@@ -90,6 +96,7 @@ class OrderSerializer(serializers.ModelSerializer):
         return nueva_orden
    
 class OrderUpdateSerializer(serializers.ModelSerializer):
+    """ update order include order details"""
     order = OrderDetailUpdateSerializer(many=True)
     
     class Meta:
@@ -103,19 +110,20 @@ class OrderUpdateSerializer(serializers.ModelSerializer):
         instance.status = validated_data.get('status', instance.status)
         instance.tipo_pago = validated_data.get('tipo_pago', instance.tipo_pago)
         instance.usuario = validated_data.get('usuario', instance.usuario)
-        instance.save()
+        instance.save()3
         '''
         orden_details_data = validated_data.pop('order')
         # Datos de Order Detail
         if orden_details_data:
             for order_detail in orden_details_data:
+                print(order_detail)
                 order_detail_id = order_detail.get('id', None)
                 if order_detail_id:
                     try:
                         update_order_detail = OrderDetail.objects.get(id=order_detail_id)
                     except:
                         raise serializers.ValidationError({
-                                "Error": "id order detail is not in Order selected"
+                                "Error": "Id is not in order detail model"
                             })
                     if update_order_detail.order.id == instance.id:
                         update_order_detail.product = order_detail.get('product')
@@ -128,10 +136,10 @@ class OrderUpdateSerializer(serializers.ModelSerializer):
                       
                 else:
                     raise serializers.ValidationError({
-                                "Error": "Id of order detail not exist"
+                                "Error": "id order detail not send"
                             })
                     #En caso de no existir el id, crear un nuevo registro
-                    #Orden_Detalles.objects.create(**orden_detail, orden=instance)
+                    #OrderDetail.objects.create(**order_detail, order=instance)
                 
         else:
             raise serializers.ValidationError({
@@ -139,3 +147,22 @@ class OrderUpdateSerializer(serializers.ModelSerializer):
                             })
         
         return instance
+
+class OrderDetailCreateSerializer(serializers.ModelSerializer):
+    """ serializer to create order detail in especific order id"""
+
+    order = serializers.PrimaryKeyRelatedField(write_only=True, queryset=Order.objects.all())
+    productId = serializers.PrimaryKeyRelatedField(write_only=True, queryset=Product.objects.all(), source='product')
+
+    class Meta():
+        model = OrderDetail
+        fields = ('order','cuantity','productId')
+    
+    def to_representation(self, instance):
+        return {
+            "order": instance.order,
+            "cuantity":instance.cuantity,
+            
+        }
+
+
