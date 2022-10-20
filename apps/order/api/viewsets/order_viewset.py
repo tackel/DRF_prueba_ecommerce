@@ -45,7 +45,7 @@ class OrderViewSets(viewsets.ModelViewSet):
 
 
 class OrderDetailViewSets(viewsets.ModelViewSet):
+
     serializer_class = OrderDetailSerializer
     queryset = OrderDetailSerializer.Meta.model.objects.all()
-
-
+   

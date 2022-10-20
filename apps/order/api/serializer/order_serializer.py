@@ -5,8 +5,10 @@ from apps.order.models import OrderDetail
 from apps.product.models import Product
 from apps.product.api.serializer.product_serializer import ProductSerializer
 
+from apps.order.utils import change_stock
 
 class OrderDetailSerializer(serializers.ModelSerializer):
+
     # para colocar lo que hay en el __str__ del modelo llamado
     #product = serializers.StringRelatedField()
     # para retornar lo que envia el serializador del modelo
@@ -15,7 +17,7 @@ class OrderDetailSerializer(serializers.ModelSerializer):
 
     class Meta():
         model = OrderDetail
-        fields = ('id','cuantity', 'productId')
+        fields = ('cuantity', 'productId')
 
     def validate_productId(self, value):
         if value.stock <= 0:
@@ -86,7 +88,7 @@ class OrderSerializer(serializers.ModelSerializer):
         #En un ciclo, recorremos el orden_detail y creamos el nuevo registro
         for order_detail in order_details_data:            
             OrderDetail.objects.create(**order_detail, order=nueva_orden) 
-            self.discount_stock(order_detail)
+            change_stock(order_detail)
         return nueva_orden
    
 class OrderUpdateSerializer(serializers.ModelSerializer):
@@ -121,6 +123,7 @@ class OrderUpdateSerializer(serializers.ModelSerializer):
                         update_order_detail.product = order_detail.get('product')
                         update_order_detail.cuantity = order_detail.get('cuantity')
                         update_order_detail.save()
+
                     else:
                         raise serializers.ValidationError({
                                 "Error": "id order detail is not in Order selected"
