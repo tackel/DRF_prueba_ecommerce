@@ -54,11 +54,18 @@ class OrderDetailUpdateSerializer(serializers.ModelSerializer):
         fields = ('id','cuantity','product','productId')
         extra_kwargs = {'id': {'read_only':False}}
     
-    def validate_id(self, value):
-        print(value)
+    def validate_productId(self, value):
+        if value.stock <= 0:
+            raise serializers.ValidationError({"Error": "Stock of product is 0"})
         return value
+
     def validate(self, data):
-        return data
+        if data['product'].stock - data['cuantity'] >= 0:
+            #product_obj = ProductSerializer.Meta.model.objects.filter(id=data['product'].id).first() # consigo la instancia
+            #product_obj.stock = (data['product'].stock - data['cuantity'])
+            #product_obj.save()
+            return data
+        raise serializers.ValidationError({"Error": f"Insufficient stock of {data['product']} for this order"})
     
     def to_representation(self, instance):
         #stock = instance.product.stock - instance.cuantity
@@ -94,7 +101,7 @@ class OrderSerializer(serializers.ModelSerializer):
         #En un ciclo, recorremos el orden_detail y creamos el nuevo registro
         for order_detail in order_details_data:            
             OrderDetail.objects.create(**order_detail, order=nueva_orden) 
-            change_stock(order_detail)
+            change_stock(order_detail, 'create_new_order','','')
         return nueva_orden
    
 class OrderUpdateSerializer(serializers.ModelSerializer):
@@ -112,17 +119,18 @@ class OrderUpdateSerializer(serializers.ModelSerializer):
         instance.status = validated_data.get('status', instance.status)
         instance.tipo_pago = validated_data.get('tipo_pago', instance.tipo_pago)
         instance.usuario = validated_data.get('usuario', instance.usuario)
-        instance.save()3
+        instance.save()
         '''
         orden_details_data = validated_data.pop('order')
         # Datos de Order Detail
         if orden_details_data:
             for order_detail in orden_details_data:
-                print(order_detail)
                 order_detail_id = order_detail.get('id', None)
                 if order_detail_id:
                     try:
                         update_order_detail = OrderDetail.objects.get(id=order_detail_id)
+                        previus_update_order_cuantity = update_order_detail.cuantity
+                        previus_update_order_product = update_order_detail.product
                     except:
                         raise serializers.ValidationError({
                                 "Error": "Id is not in order detail model"
@@ -131,6 +139,7 @@ class OrderUpdateSerializer(serializers.ModelSerializer):
                         update_order_detail.product = order_detail.get('product')
                         update_order_detail.cuantity = order_detail.get('cuantity')
                         update_order_detail.save()
+                        change_stock(update_order_detail, 'update_order', previus_update_order_cuantity, previus_update_order_product)
 
                     else:
                         raise serializers.ValidationError({
